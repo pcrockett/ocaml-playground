@@ -33,21 +33,16 @@ let is_failure result = match result with Fail _ -> true | _ -> false
 
 let root_dir args =
   match args with
-  | [| _ |] -> Ok "."
-  | [| _; dir_path |] -> Ok dir_path
-  | _ -> Error "Expecting 1 argument: test directory path"
+  | [| _ |] -> "."
+  | [| _; dir_path |] -> dir_path
+  | _ -> raise (Invalid_argument "Expecting 1 argument: test directory path")
 
 let to_list seq = Seq.fold_left (fun a b -> a @ [ b ]) [] seq
 
 let main args =
-  let test_dir =
-    match root_dir args with
-    | Ok path -> path
-    | Error msg -> raise (Invalid_argument msg)
-  in
   match
-    all_test_files test_dir |> Seq.map run_tests |> Seq.map handle_result
-    |> Seq.filter is_failure |> to_list
+    args |> root_dir |> all_test_files |> Seq.map run_tests
+    |> Seq.map handle_result |> Seq.filter is_failure |> to_list
   with
   | [] -> 0
   | _ -> 1
